@@ -88,68 +88,6 @@ local Library = {
     DPIRegistry = {},
 }
 
--- Diccionario de traducciones
-Library.Translations = {
-    ["Search"] = "Buscar",
-    ["Execute"] = "Ejecutar",
-    ["Toggle"] = "Alternar",
-    ["Lock"] = "Bloquear",
-    ["Unlock"] = "Desbloquear",
-    ["Are you sure?"] = "¿Estás seguro?",
-    ["None"] = "Ninguno",
-    ["Copy color"] = "Copiar color", 
-    ["Paste color"] = "Pegar color",
-    ["Copy Hex"] = "Copiar Hex",
-    ["Copy RGB"] = "Copiar RGB",
-    ["Search..."] = "Buscar...",
-    ["Key"] = "Tecla",
-}
-
-Library.CurrentLanguage = "en"
-
-function Library:TranslateText(text)
-    if Library.CurrentLanguage == "es" and Library.Translations[text] then
-        return Library.Translations[text]
-    end
-    return text
-end
-
-function Library:TranslateUI()
-    -- Traducir elementos de búsqueda
-    if SearchBox then
-        SearchBox.PlaceholderText = Library:TranslateText("Search")
-    end
-
-    -- Traducir todos los elementos de la UI
-    for _, Tab in pairs(Library.Tabs) do
-        -- Traducir elementos en groupboxes
-        for _, Groupbox in pairs(Tab.Groupboxes or {}) do
-            for _, Element in pairs(Groupbox.Elements) do
-                if Element.TextLabel then
-                    Element.TextLabel.Text = Library:TranslateText(Element.TextLabel.Text)
-                end
-                if Element.Base and Element.Base:IsA("TextButton") then
-                    Element.Base.Text = Library:TranslateText(Element.Base.Text)
-                end
-            end
-        end
-        
-        -- Traducir elementos en tabboxes
-        for _, Tabbox in pairs(Tab.Tabboxes or {}) do
-            for _, SubTab in pairs(Tabbox.Tabs or {}) do
-                for _, Element in pairs(SubTab.Elements) do
-                    if Element.TextLabel then
-                        Element.TextLabel.Text = Library:TranslateText(Element.TextLabel.Text)
-                    end
-                    if Element.Base and Element.Base:IsA("TextButton") then
-                        Element.Base.Text = Library:TranslateText(Element.Base.Text)
-                    end
-                end
-            end
-        end
-    end
-end
-
 if RunService:IsStudio() then 
     if UserInputService.TouchEnabled and not UserInputService.MouseEnabled then
         Library.IsMobile = true
@@ -3114,20 +3052,15 @@ do
             Value = Info.Default,
             Min = Info.Min,
             Max = Info.Max,
-
             Prefix = Info.Prefix,
             Suffix = Info.Suffix,
-
             Tooltip = Info.Tooltip,
             DisabledTooltip = Info.DisabledTooltip,
             TooltipTable = nil,
-
             Callback = Info.Callback,
             Changed = Info.Changed,
-
             Disabled = Info.Disabled,
             Visible = Info.Visible,
-
             Type = "Slider",
         }
 
@@ -3150,80 +3083,79 @@ do
             })
         end
 
-        local Bar = New("TextButton", {
-            Active = not Slider.Disabled,
+        local SliderContainer = New("Frame", {
             AnchorPoint = Vector2.new(0, 1),
             BackgroundColor3 = "MainColor",
-            BorderColor3 = "OutlineColor",
+            BorderColor3 = "OutlineColor", 
             BorderSizePixel = 1,
             Position = UDim2.fromScale(0, 1),
             Size = UDim2.new(1, 0, 0, 13),
-            Text = "",
             Parent = Holder,
         })
 
-        local DisplayLabel = New("TextLabel", {
+        local ValueBox = New("TextBox", {
             BackgroundTransparency = 1,
             Size = UDim2.fromScale(1, 1),
             Text = "",
             TextSize = 14,
             ZIndex = 2,
-            Parent = Bar,
-        })
-        New("UIStroke", {
-            ApplyStrokeMode = Enum.ApplyStrokeMode.Contextual,
-            Color = "Dark",
-            LineJoinMode = Enum.LineJoinMode.Miter,
-            Parent = DisplayLabel,
+            Parent = SliderContainer,
+            ClearTextOnFocus = true,
         })
 
         local Fill = New("Frame", {
             BackgroundColor3 = "AccentColor",
             Size = UDim2.fromScale(0.5, 1),
-            Parent = Bar,
+            Parent = SliderContainer,
+        })
 
-            DPIExclude = {
-                Size = true,
-            },
+        local Knob = New("Frame", {
+            AnchorPoint = Vector2.new(0.5, 0.5),
+            BackgroundColor3 = "FontColor",
+            Position = UDim2.fromScale(0.5, 0.5),
+            Size = UDim2.fromOffset(4, 12),
+            ZIndex = 3,
+            Parent = SliderContainer,
+        })
+        New("UICorner", {
+            CornerRadius = UDim.new(1, 0),
+            Parent = Knob,
         })
 
         function Slider:UpdateColors()
-            if Library.Unloaded then
-                return
-            end
+            if Library.Unloaded then return end
 
             if SliderLabel then
                 SliderLabel.TextTransparency = Slider.Disabled and 0.8 or 0
             end
-            DisplayLabel.TextTransparency = Slider.Disabled and 0.8 or 0
+            ValueBox.TextTransparency = Slider.Disabled and 0.8 or 0
 
             Fill.BackgroundColor3 = Slider.Disabled and Library.Scheme.OutlineColor or Library.Scheme.AccentColor
             Library.Registry[Fill].BackgroundColor3 = Slider.Disabled and "OutlineColor" or "AccentColor"
+            
+            Knob.BackgroundColor3 = Slider.Disabled and Library:GetDarkerColor(Library.Scheme.FontColor) or Library.Scheme.FontColor
+            Library.Registry[Knob].BackgroundColor3 = Slider.Disabled and function()
+                return Library:GetDarkerColor(Library.Scheme.FontColor)
+            end or "FontColor"
         end
 
         function Slider:Display()
-            if Library.Unloaded then
-                return
-            end
+            if Library.Unloaded then return end
 
             if Info.Compact then
-                DisplayLabel.Text = string.format("%s: %s%s%s", Slider.Text, Slider.Prefix, Slider.Value, Slider.Suffix)
+                ValueBox.Text = string.format("%s: %s%s%s", Slider.Text, Slider.Prefix, Slider.Value, Slider.Suffix)
             elseif Info.HideMax then
-                DisplayLabel.Text = string.format("%s%s%s", Slider.Prefix, Slider.Value, Slider.Suffix)
+                ValueBox.Text = string.format("%s%s%s", Slider.Prefix, Slider.Value, Slider.Suffix)
             else
-                DisplayLabel.Text = string.format(
-                    "%s%s%s/%s%s%s",
-                    Slider.Prefix,
-                    Slider.Value,
-                    Slider.Suffix,
-                    Slider.Prefix,
-                    Slider.Max,
-                    Slider.Suffix
+                ValueBox.Text = string.format("%s%s%s/%s%s%s", 
+                    Slider.Prefix, Slider.Value, Slider.Suffix,
+                    Slider.Prefix, Slider.Max, Slider.Suffix
                 )
             end
 
             local X = (Slider.Value - Slider.Min) / (Slider.Max - Slider.Min)
             Fill.Size = UDim2.fromScale(X, 1)
+            Knob.Position = UDim2.fromScale(X, 0.5)
         end
 
         function Slider:OnChanged(Func)
@@ -3234,37 +3166,17 @@ do
             if Info.Rounding == 0 then
                 return math.floor(Value)
             end
-
             return tonumber(string.format("%." .. Info.Rounding .. "f", Value))
         end
 
-        function Slider:SetMax(Value)
-            assert(Value > Slider.Min, "Max value cannot be less than the current min value.")
-
-            Slider.Value = math.clamp(Slider.Value, Slider.Min, Value)
-            Slider.Max = Value
-            Slider:Display()
-        end
-
-        function Slider:SetMin(Value)
-            assert(Value < Slider.Max, "Min value cannot be greater than the current max value.")
-
-            Slider.Value = math.clamp(Slider.Value, Value, Slider.Max)
-            Slider.Min = Value
-            Slider:Display()
-        end
-
         function Slider:SetValue(Str)
-            if Slider.Disabled then
-                return
-            end
+            if Slider.Disabled then return end
 
             local Num = tonumber(Str)
-            if not Num then
-                return
-            end
+            if not Num then return end
 
-            Num = math.clamp(Num, Slider.Min, Slider.Max)
+            Num = math.clamp(Round(Num), Slider.Min, Slider.Max)
+            if Num == Slider.Value then return end
 
             Slider.Value = Num
             Slider:Display()
@@ -3280,68 +3192,56 @@ do
                 Slider.TooltipTable.Disabled = Slider.Disabled
             end
 
-            Bar.Active = not Slider.Disabled
+            SliderContainer.Active = not Slider.Disabled
             Slider:UpdateColors()
         end
 
         function Slider:SetVisible(Visible: boolean)
             Slider.Visible = Visible
-
             Holder.Visible = Slider.Visible
             Groupbox:Resize()
         end
 
-        function Slider:SetText(Text: string)
-            Slider.Text = Text
-            if SliderLabel then
-                SliderLabel.Text = Text
-                return
-            end
-            Slider:Display()
-        end
+        ValueBox.FocusLost:Connect(function(enter)
+            if not enter then return end
+            Slider:SetValue(ValueBox.Text)
+        end)
 
-        function Slider:SetPrefix(Prefix: string)
-            Slider.Prefix = Prefix
-            Slider:Display()
-        end
+        SliderContainer.InputBegan:Connect(function(input)
+            if Slider.Disabled then return end
+            if not (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then return end
 
-        function Slider:SetSuffix(Suffix: string)
-            Slider.Suffix = Suffix
-            Slider:Display()
-        end
+            local Connection
+            Connection = UserInputService.InputChanged:Connect(function(input)
+                if input.UserInputType ~= Enum.UserInputType.MouseMovement and input.UserInputType ~= Enum.UserInputType.Touch then return end
 
-        Bar.MouseButton1Down:Connect(function()
-            if Slider.Disabled then
-                return
-            end
-
-            for _, Side in pairs(Library.ActiveTab.Sides) do
-                Side.ScrollingEnabled = false
-            end
-
-            while UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1 or Enum.UserInputType.Touch) do
-                local Location = Mouse.X
-                local Scale = math.clamp((Location - Bar.AbsolutePosition.X) / Bar.AbsoluteSize.X, 0, 1)
-
+                local BoundingBox = SliderContainer.AbsolutePosition
+                local Size = SliderContainer.AbsoluteSize
+                local Location = input.Position
+                local X = math.clamp((Location.X - BoundingBox.X) / Size.X, 0, 1)
+                
                 local OldValue = Slider.Value
-                Slider.Value = Round(Slider.Min + ((Slider.Max - Slider.Min) * Scale))
+                Slider.Value = Round(Slider.Min + ((Slider.Max - Slider.Min) * X))
 
-                Slider:Display()
                 if Slider.Value ~= OldValue then
+                    Slider:Display()
                     Library:SafeCallback(Slider.Callback, Slider.Value)
                     Library:SafeCallback(Slider.Changed, Slider.Value)
                 end
+            end)
 
-                RunService.RenderStepped:Wait()
-            end
-
-            for _, Side in pairs(Library.ActiveTab.Sides) do
-                Side.ScrollingEnabled = true
-            end
+            UserInputService.InputEnded:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    if Connection then
+                        Connection:Disconnect()
+                        Connection = nil
+                    end
+                end
+            end)
         end)
 
         if typeof(Slider.Tooltip) == "string" or typeof(Slider.DisabledTooltip) == "string" then
-            Slider.TooltipTable = Library:AddTooltip(Slider.Tooltip, Slider.DisabledTooltip, Bar)
+            Slider.TooltipTable = Library:AddTooltip(Slider.Tooltip, Slider.DisabledTooltip, SliderContainer)
             Slider.TooltipTable.Disabled = Slider.Disabled
         end
 
@@ -5141,9 +5041,6 @@ function Library:CreateWindow(WindowInfo)
         task.spawn(Library.Toggle)
     end
 
-    -- Obtener el ícono de traducción
-    local TranslateIcon = Library:GetIcon("globe") or Library:GetIcon("languages")
-
     if Library.IsMobile then
         local ToggleButton = Library:AddDraggableButton("Toggle", function()
             Library:Toggle()
@@ -5154,58 +5051,15 @@ function Library:CreateWindow(WindowInfo)
             self:SetText(Library.CantDragForced and "Unlock" or "Lock")
         end)
 
-        -- Agregar botón de traducción con ícono
-        local TranslateButton = Library:AddDraggableButton("ES", function(self)
-            Library.CurrentLanguage = Library.CurrentLanguage == "en" and "es" or "en"
-            self:SetText(Library.CurrentLanguage == "en" and "ES" or "EN")
-            Library:TranslateUI()
-        end)
-        if TranslateIcon then
-            local icon = New("ImageLabel", {
-                Image = TranslateIcon.Url,
-                ImageColor3 = "FontColor",
-                ImageRectOffset = TranslateIcon.ImageRectOffset,
-                ImageRectSize = TranslateIcon.ImageRectSize,
-                BackgroundTransparency = 1,
-                Size = UDim2.fromOffset(16, 16),
-                Position = UDim2.fromOffset(2, 2),
-                Parent = TranslateButton.Button,
-            })
-        end
-
         if WindowInfo.MobileButtonsSide == "Right" then
             ToggleButton.Button.Position = UDim2.new(1, -6, 0, 6)
             ToggleButton.Button.AnchorPoint = Vector2.new(1, 0)
 
             LockButton.Button.Position = UDim2.new(1, -6, 0, 46)
             LockButton.Button.AnchorPoint = Vector2.new(1, 0)
-
-            TranslateButton.Button.Position = UDim2.new(1, -6, 0, 86)
-            TranslateButton.Button.AnchorPoint = Vector2.new(1, 0)
         else
             LockButton.Button.Position = UDim2.fromOffset(6, 46)
-            TranslateButton.Button.Position = UDim2.fromOffset(6, 86)
         end
-    else
-        -- Agregar botón de traducción para versión de escritorio con ícono
-        local TranslateButton = Library:AddDraggableButton("ES", function(self)
-            Library.CurrentLanguage = Library.CurrentLanguage == "en" and "es" or "en"
-            self:SetText(Library.CurrentLanguage == "en" and "ES" or "EN")
-            Library:TranslateUI()
-        end)
-        if TranslateIcon then
-            local icon = New("ImageLabel", {
-                Image = TranslateIcon.Url,
-                ImageColor3 = "FontColor",
-                ImageRectOffset = TranslateIcon.ImageRectOffset,
-                ImageRectSize = TranslateIcon.ImageRectSize,
-                BackgroundTransparency = 1,
-                Size = UDim2.fromOffset(16, 16),
-                Position = UDim2.fromOffset(2, 2),
-                Parent = TranslateButton.Button,
-            })
-        end
-        TranslateButton.Button.Position = UDim2.fromOffset(6, 6)
     end
 
     --// Execution \\--
@@ -5382,57 +5236,6 @@ function Library:CreateWindow(WindowInfo)
             Library.Toggle()
         end
     end))
-
-    -- Crear tab de configuración fija
-    local SettingsTab = Window:AddTab("Configuración", "settings")
-    SettingsTab.IsFixed = true -- Marcar como tab fija
-
-    -- Groupbox para opciones generales
-    local GeneralBox = SettingsTab:AddLeftGroupbox("General")
-
-    -- Opción para cambiar el tema
-    GeneralBox:AddDropdown("ThemeDropdown", {
-        Text = "Tema",
-        Values = {"Oscuro", "Claro"},
-        Default = Library.IsLightTheme and "Claro" or "Oscuro",
-        Callback = function(val)
-            if val == "Claro" then
-                Library.IsLightTheme = true
-                Library.Scheme.BackgroundColor = Color3.fromRGB(245, 245, 245)
-                Library.Scheme.MainColor = Color3.fromRGB(230, 230, 230)
-                Library.Scheme.AccentColor = Color3.fromRGB(125, 85, 255)
-                Library.Scheme.OutlineColor = Color3.fromRGB(200, 200, 200)
-                Library.Scheme.FontColor = Color3.new(0, 0, 0)
-            else
-                Library.IsLightTheme = false
-                Library.Scheme.BackgroundColor = Color3.fromRGB(15, 15, 15)
-                Library.Scheme.MainColor = Color3.fromRGB(25, 25, 25)
-                Library.Scheme.AccentColor = Color3.fromRGB(125, 85, 255)
-                Library.Scheme.OutlineColor = Color3.fromRGB(40, 40, 40)
-                Library.Scheme.FontColor = Color3.new(1, 1, 1)
-            end
-            Library:UpdateColorsUsingRegistry()
-        end
-    })
-
-    -- Opción para cambiar la tecla de apertura (como addon de un label)
-    local KeyLabel = GeneralBox:AddLabel("Tecla para abrir UI")
-    KeyLabel:AddKeyPicker("OpenKey", {
-        Text = "Tecla para abrir UI",
-        Default = Library:GetKeyString(Library.ToggleKeybind),
-        Callback = function(key)
-            if typeof(key) == "EnumItem" then
-                Library.ToggleKeybind = key
-            elseif typeof(key) == "string" and Enum.KeyCode[key] then
-                Library.ToggleKeybind = Enum.KeyCode[key]
-            end
-        end
-    })
-
-    -- Evitar que la tab de configuración pueda ser eliminada o escondida
-    Window.SettingsTab = SettingsTab
-    SettingsTab.Remove = function() end
-    SettingsTab.Hide = function() end
 
     return Window
 end
