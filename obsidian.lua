@@ -5415,8 +5415,9 @@ function Library:CreateWindow(WindowInfo)
         end
     })
 
-    -- Opción para cambiar la tecla de apertura
-    GeneralBox:AddKeyPicker("OpenKey", {
+    -- Opción para cambiar la tecla de apertura (como addon de un label)
+    local KeyLabel = GeneralBox:AddLabel("Tecla para abrir UI")
+    KeyLabel:AddKeyPicker("OpenKey", {
         Text = "Tecla para abrir UI",
         Default = Library:GetKeyString(Library.ToggleKeybind),
         Callback = function(key)
