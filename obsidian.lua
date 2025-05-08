@@ -5141,6 +5141,9 @@ function Library:CreateWindow(WindowInfo)
         task.spawn(Library.Toggle)
     end
 
+    -- Obtener el ícono de traducción
+    local TranslateIcon = Library:GetIcon("globe") or Library:GetIcon("languages")
+
     if Library.IsMobile then
         local ToggleButton = Library:AddDraggableButton("Toggle", function()
             Library:Toggle()
@@ -5151,12 +5154,24 @@ function Library:CreateWindow(WindowInfo)
             self:SetText(Library.CantDragForced and "Unlock" or "Lock")
         end)
 
-        -- Agregar botón de traducción
+        -- Agregar botón de traducción con ícono
         local TranslateButton = Library:AddDraggableButton("ES", function(self)
             Library.CurrentLanguage = Library.CurrentLanguage == "en" and "es" or "en"
             self:SetText(Library.CurrentLanguage == "en" and "ES" or "EN")
             Library:TranslateUI()
         end)
+        if TranslateIcon then
+            local icon = New("ImageLabel", {
+                Image = TranslateIcon.Url,
+                ImageColor3 = "FontColor",
+                ImageRectOffset = TranslateIcon.ImageRectOffset,
+                ImageRectSize = TranslateIcon.ImageRectSize,
+                BackgroundTransparency = 1,
+                Size = UDim2.fromOffset(16, 16),
+                Position = UDim2.fromOffset(2, 2),
+                Parent = TranslateButton.Button,
+            })
+        end
 
         if WindowInfo.MobileButtonsSide == "Right" then
             ToggleButton.Button.Position = UDim2.new(1, -6, 0, 6)
@@ -5172,12 +5187,24 @@ function Library:CreateWindow(WindowInfo)
             TranslateButton.Button.Position = UDim2.fromOffset(6, 86)
         end
     else
-        -- Agregar botón de traducción para versión de escritorio
+        -- Agregar botón de traducción para versión de escritorio con ícono
         local TranslateButton = Library:AddDraggableButton("ES", function(self)
             Library.CurrentLanguage = Library.CurrentLanguage == "en" and "es" or "en"
             self:SetText(Library.CurrentLanguage == "en" and "ES" or "EN")
             Library:TranslateUI()
         end)
+        if TranslateIcon then
+            local icon = New("ImageLabel", {
+                Image = TranslateIcon.Url,
+                ImageColor3 = "FontColor",
+                ImageRectOffset = TranslateIcon.ImageRectOffset,
+                ImageRectSize = TranslateIcon.ImageRectSize,
+                BackgroundTransparency = 1,
+                Size = UDim2.fromOffset(16, 16),
+                Position = UDim2.fromOffset(2, 2),
+                Parent = TranslateButton.Button,
+            })
+        end
         TranslateButton.Button.Position = UDim2.fromOffset(6, 6)
     end
 
@@ -5355,6 +5382,56 @@ function Library:CreateWindow(WindowInfo)
             Library.Toggle()
         end
     end))
+
+    -- Crear tab de configuración fija
+    local SettingsTab = Window:AddTab("Configuración", "settings")
+    SettingsTab.IsFixed = true -- Marcar como tab fija
+
+    -- Groupbox para opciones generales
+    local GeneralBox = SettingsTab:AddLeftGroupbox("General")
+
+    -- Opción para cambiar el tema
+    GeneralBox:AddDropdown("ThemeDropdown", {
+        Text = "Tema",
+        Values = {"Oscuro", "Claro"},
+        Default = Library.IsLightTheme and "Claro" or "Oscuro",
+        Callback = function(val)
+            if val == "Claro" then
+                Library.IsLightTheme = true
+                Library.Scheme.BackgroundColor = Color3.fromRGB(245, 245, 245)
+                Library.Scheme.MainColor = Color3.fromRGB(230, 230, 230)
+                Library.Scheme.AccentColor = Color3.fromRGB(125, 85, 255)
+                Library.Scheme.OutlineColor = Color3.fromRGB(200, 200, 200)
+                Library.Scheme.FontColor = Color3.new(0, 0, 0)
+            else
+                Library.IsLightTheme = false
+                Library.Scheme.BackgroundColor = Color3.fromRGB(15, 15, 15)
+                Library.Scheme.MainColor = Color3.fromRGB(25, 25, 25)
+                Library.Scheme.AccentColor = Color3.fromRGB(125, 85, 255)
+                Library.Scheme.OutlineColor = Color3.fromRGB(40, 40, 40)
+                Library.Scheme.FontColor = Color3.new(1, 1, 1)
+            end
+            Library:UpdateColorsUsingRegistry()
+        end
+    })
+
+    -- Opción para cambiar la tecla de apertura
+    GeneralBox:AddKeyPicker("OpenKey", {
+        Text = "Tecla para abrir UI",
+        Default = Library:GetKeyString(Library.ToggleKeybind),
+        Callback = function(key)
+            if typeof(key) == "EnumItem" then
+                Library.ToggleKeybind = key
+            elseif typeof(key) == "string" and Enum.KeyCode[key] then
+                Library.ToggleKeybind = Enum.KeyCode[key]
+            end
+        end
+    })
+
+    -- Evitar que la tab de configuración pueda ser eliminada o escondida
+    Window.SettingsTab = SettingsTab
+    SettingsTab.Remove = function() end
+    SettingsTab.Hide = function() end
 
     return Window
 end
