@@ -44,8 +44,8 @@ local Library = {
     Notifications = {},
 
     ToggleKeybind = Enum.KeyCode.RightControl,
-    TweenInfo = TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-    NotifyTweenInfo = TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+    TweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+    NotifyTweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
 
     Toggled = false,
     Unloaded = false,
@@ -68,20 +68,20 @@ local Library = {
 
     MinSize = Vector2.new(480, 360),
     DPIScale = 1,
-    CornerRadius = 4,
+    CornerRadius = 6,
 
     IsLightTheme = false,
     Scheme = {
-        BackgroundColor = Color3.fromRGB(15, 15, 15),
-        MainColor = Color3.fromRGB(25, 25, 25),
-        AccentColor = Color3.fromRGB(125, 85, 255),
-        OutlineColor = Color3.fromRGB(40, 40, 40),
-        FontColor = Color3.new(1, 1, 1),
-        Font = Font.fromEnum(Enum.Font.Code),
+        BackgroundColor = Color3.fromRGB(20, 20, 25), -- Fondo más oscuro y con tono azulado
+        MainColor = Color3.fromRGB(30, 30, 35), -- Color principal más oscuro y con tono azulado  
+        AccentColor = Color3.fromRGB(98, 195, 247), -- Azul más brillante y moderno
+        OutlineColor = Color3.fromRGB(50, 50, 55), -- Bordes más suaves
+        FontColor = Color3.fromRGB(235, 235, 235), -- Texto más suave
+        Font = Font.fromEnum(Enum.Font.Gotham), -- Fuente más moderna
 
-        Red = Color3.fromRGB(255, 50, 50),
-        Dark = Color3.new(0, 0, 0),
-        White = Color3.new(1, 1, 1),
+        Red = Color3.fromRGB(255, 75, 75), -- Rojo más suave
+        Dark = Color3.fromRGB(15, 15, 20), -- Negro con tono azulado
+        White = Color3.fromRGB(235, 235, 235), -- Blanco más suave
     },
 
     Registry = {},
@@ -855,6 +855,19 @@ function Library:MakeOutline(Frame: GuiObject, Corner: number?, ZIndex: number?)
         Size = UDim2.new(1, 4, 1, 4),
         ZIndex = ZIndex,
         Parent = Frame,
+    })
+
+    -- Añadir sombra sutil
+    New("ImageLabel", {
+        BackgroundTransparency = 1,
+        Image = "rbxassetid://7912134082",
+        ImageColor3 = Color3.new(0, 0, 0),
+        ImageTransparency = 0.65,
+        Position = UDim2.fromOffset(-15, -15),
+        Size = UDim2.new(1, 30, 1, 30),
+        SliceCenter = Rect.new(30, 30, 30, 30),
+        ZIndex = (ZIndex or 0) - 1,
+        Parent = Holder
     })
 
     local Outline = New("Frame", {
@@ -1642,8 +1655,6 @@ do
         local ColorPicker = {
             Value = Info.Default,
             Transparency = Info.Transparency or 0,
-            RecentColors = {},
-            MaxRecentColors = 8,
 
             Callback = Info.Callback,
             Changed = Info.Changed,
@@ -1673,7 +1684,7 @@ do
         --// Color Menu \\--
         local ColorMenu = Library:AddContextMenu(
             Holder,
-            UDim2.fromOffset(Info.Transparency and 300 or 280, 0),
+            UDim2.fromOffset(Info.Transparency and 256 or 234, 0),
             function()
                 return { 0.5, Holder.AbsoluteSize.Y + 1.5 }
             end,
@@ -1699,79 +1710,6 @@ do
                 TextXAlignment = Enum.TextXAlignment.Left,
                 Parent = ColorMenu.Menu,
             })
-        end
-
-        -- Color Preview
-        local PreviewHolder = New("Frame", {
-            BackgroundTransparency = 1,
-            Size = UDim2.new(1, 0, 0, 30),
-            Parent = ColorMenu.Menu,
-        })
-
-        local CurrentPreview = New("Frame", {
-            BackgroundColor3 = ColorPicker.Value,
-            Size = UDim2.fromScale(0.5, 1),
-            Parent = PreviewHolder,
-        })
-        New("UICorner", {
-            CornerRadius = UDim.new(0, 4),
-            Parent = CurrentPreview,
-        })
-        New("UIStroke", {
-            Color = "OutlineColor",
-            Parent = CurrentPreview,
-        })
-
-        local NewPreview = New("Frame", {
-            AnchorPoint = Vector2.new(1, 0),
-            BackgroundColor3 = ColorPicker.Value,
-            Position = UDim2.fromScale(1, 0),
-            Size = UDim2.fromScale(0.5, 1),
-            Parent = PreviewHolder,
-        })
-        New("UICorner", {
-            CornerRadius = UDim.new(0, 4),
-            Parent = NewPreview,
-        })
-        New("UIStroke", {
-            Color = "OutlineColor",
-            Parent = NewPreview,
-        })
-
-        -- Recent Colors
-        local RecentHolder = New("Frame", {
-            BackgroundTransparency = 1,
-            Size = UDim2.new(1, 0, 0, 30),
-            Parent = ColorMenu.Menu,
-        })
-        New("UIListLayout", {
-            FillDirection = Enum.FillDirection.Horizontal,
-            Padding = UDim.new(0, 4),
-            Parent = RecentHolder,
-        })
-
-        local function CreateRecentColor(Color)
-            local Button = New("TextButton", {
-                BackgroundColor3 = Color,
-                Size = UDim2.fromScale(1/ColorPicker.MaxRecentColors, 1),
-                Text = "",
-                Parent = RecentHolder,
-            })
-            New("UICorner", {
-                CornerRadius = UDim.new(0, 4),
-                Parent = Button,
-            })
-            New("UIStroke", {
-                Color = "OutlineColor",
-                Parent = Button,
-            })
-
-            Button.MouseButton1Click:Connect(function()
-                ColorPicker:SetValueRGB(Color)
-                ColorPicker:Update()
-            end)
-
-            return Button
         end
 
         local ColorHolder = New("Frame", {
@@ -1815,15 +1753,7 @@ do
             Parent = ColorHolder,
         })
         New("UIGradient", {
-            Color = ColorSequence.new({
-                ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 0, 0)),
-                ColorSequenceKeypoint.new(0.167, Color3.fromRGB(255, 255, 0)),
-                ColorSequenceKeypoint.new(0.333, Color3.fromRGB(0, 255, 0)),
-                ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 255, 255)),
-                ColorSequenceKeypoint.new(0.667, Color3.fromRGB(0, 0, 255)),
-                ColorSequenceKeypoint.new(0.833, Color3.fromRGB(255, 0, 255)),
-                ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 0, 0)),
-            }),
+            Color = ColorSequence.new(HueSequenceTable),
             Rotation = 90,
             Parent = HueSelector,
         })
@@ -1892,7 +1822,7 @@ do
             BorderSizePixel = 1,
             ClearTextOnFocus = false,
             Size = UDim2.fromScale(1, 1),
-            Text = "#" .. ColorPicker.Value:ToHex(),
+            Text = "#??????",
             TextSize = 14,
             Parent = InfoHolder,
         })
@@ -1903,72 +1833,58 @@ do
             BorderSizePixel = 1,
             ClearTextOnFocus = false,
             Size = UDim2.fromScale(1, 1),
-            Text = table.concat({
-                math.floor(ColorPicker.Value.R * 255),
-                math.floor(ColorPicker.Value.G * 255),
-                math.floor(ColorPicker.Value.B * 255),
-            }, ", "),
+            Text = "?, ?, ?",
             TextSize = 14,
             Parent = InfoHolder,
         })
 
-        -- Buttons
-        local ButtonHolder = New("Frame", {
-            BackgroundTransparency = 1,
-            Size = UDim2.new(1, 0, 0, 25),
-            Parent = ColorMenu.Menu,
-        })
-        New("UIListLayout", {
-            FillDirection = Enum.FillDirection.Horizontal,
-            Padding = UDim.new(0, 4),
-            Parent = ButtonHolder,
-        })
+        --// Context Menu \\--
+        local ContextMenu = Library:AddContextMenu(Holder, UDim2.fromOffset(93, 0), function()
+            return { Holder.AbsoluteSize.X + 1.5, 0.5 }
+        end, 1)
+        ColorPicker.ContextMenu = ContextMenu
+        do
+            local function CreateButton(Text, Func)
+                local Button = New("TextButton", {
+                    BackgroundTransparency = 1,
+                    Size = UDim2.new(1, 0, 0, 21),
+                    Text = Text,
+                    TextSize = 14,
+                    Parent = ContextMenu.Menu,
+                })
 
-        local function CreateButton(Text, Callback)
-            local Button = New("TextButton", {
-                BackgroundColor3 = "MainColor",
-                Size = UDim2.fromScale(0.5, 1),
-                Text = Text,
-                TextSize = 14,
-                Parent = ButtonHolder,
-            })
-            New("UICorner", {
-                CornerRadius = UDim.new(0, 4),
-                Parent = Button,
-            })
-            New("UIStroke", {
-                Color = "OutlineColor",
-                Parent = Button,
-            })
-
-            Button.MouseButton1Click:Connect(Callback)
-            return Button
-        end
-
-        CreateButton("Apply", function()
-            ColorPicker:Update()
-            ColorMenu:Close()
-        end)
-
-        CreateButton("Cancel", function()
-            ColorPicker:SetValueRGB(CurrentPreview.BackgroundColor3)
-            ColorPicker:Display()
-            ColorMenu:Close()
-        end)
-
-        function ColorPicker:AddRecentColor(Color)
-            if #ColorPicker.RecentColors >= ColorPicker.MaxRecentColors then
-                table.remove(ColorPicker.RecentColors, 1)
-                RecentHolder:GetChildren()[1]:Destroy()
+                Button.MouseButton1Click:Connect(function()
+                    Library:SafeCallback(Func)
+                    ContextMenu:Close()
+                end)
             end
 
-            table.insert(ColorPicker.RecentColors, Color)
-            CreateRecentColor(Color)
+            CreateButton("Copy color", function()
+                Library.CopiedColor = { ColorPicker.Value, ColorPicker.Transparency }
+            end)
+
+            CreateButton("Paste color", function()
+                ColorPicker:SetValueRGB(Library.CopiedColor[1], Library.CopiedColor[2])
+            end)
+
+            if setclipboard then
+                CreateButton("Copy Hex", function()
+                    setclipboard(tostring(ColorPicker.Value:ToHex()))
+                end)
+                CreateButton("Copy RGB", function()
+                    setclipboard(table.concat({
+                        math.floor(ColorPicker.Value.R * 255),
+                        math.floor(ColorPicker.Value.G * 255),
+                        math.floor(ColorPicker.Value.B * 255),
+                    }, ", "))
+                end)
+            end
         end
+
+        --// End \\--
 
         function ColorPicker:SetHSVFromRGB(Color)
             ColorPicker.Hue, ColorPicker.Sat, ColorPicker.Vib = Color:ToHSV()
-            NewPreview.BackgroundColor3 = Color
         end
 
         function ColorPicker:Display()
@@ -1993,7 +1909,6 @@ do
                 TransparencyCursor.Position = UDim2.fromScale(0.5, ColorPicker.Transparency)
             end
 
-            NewPreview.BackgroundColor3 = ColorPicker.Value
             HueBox.Text = "#" .. ColorPicker.Value:ToHex()
             RgbBox.Text = table.concat({
                 math.floor(ColorPicker.Value.R * 255),
@@ -2004,7 +1919,6 @@ do
 
         function ColorPicker:Update()
             ColorPicker:Display()
-            ColorPicker:AddRecentColor(ColorPicker.Value)
 
             Library:SafeCallback(ColorPicker.Callback, ColorPicker.Value)
             Library:SafeCallback(ColorPicker.Changed, ColorPicker.Value)
@@ -2028,11 +1942,8 @@ do
             ColorPicker:Display()
         end
 
-        Holder.MouseButton1Click:Connect(function()
-            CurrentPreview.BackgroundColor3 = ColorPicker.Value
-            NewPreview.BackgroundColor3 = ColorPicker.Value
-            ColorMenu:Toggle()
-        end)
+        Holder.MouseButton1Click:Connect(ColorMenu.Toggle)
+        Holder.MouseButton2Click:Connect(ContextMenu.Toggle)
 
         SatVipMap.MouseButton1Down:Connect(function()
             while UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1 or Enum.UserInputType.Touch) do
@@ -2044,37 +1955,49 @@ do
                 local MaxY = MinY + SatVipMap.AbsoluteSize.Y
                 local LocationY = math.clamp(Mouse.Y, MinY, MaxY)
 
+                local OldSat = ColorPicker.Sat
+                local OldVib = ColorPicker.Vib
                 ColorPicker.Sat = (LocationX - MinX) / (MaxX - MinX)
                 ColorPicker.Vib = 1 - ((LocationY - MinY) / (MaxY - MinY))
 
-                ColorPicker:Display()
+                if ColorPicker.Sat ~= OldSat or ColorPicker.Vib ~= OldVib then
+                    ColorPicker:Update()
+                end
 
                 RunService.RenderStepped:Wait()
             end
         end)
-
         HueSelector.MouseButton1Down:Connect(function()
             while UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1 or Enum.UserInputType.Touch) do
                 local Min = HueSelector.AbsolutePosition.Y
                 local Max = Min + HueSelector.AbsoluteSize.Y
                 local Location = math.clamp(Mouse.Y, Min, Max)
 
+                local OldHue = ColorPicker.Hue
                 ColorPicker.Hue = (Location - Min) / (Max - Min)
-                ColorPicker:Display()
+
+                if ColorPicker.Hue ~= OldHue then
+                    ColorPicker:Update()
+                end
 
                 RunService.RenderStepped:Wait()
             end
         end)
-
         if TransparencySelector then
             TransparencySelector.MouseButton1Down:Connect(function()
-                while UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1 or Enum.UserInputType.Touch) do
+                while
+                    UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1 or Enum.UserInputType.Touch)
+                do
                     local Min = TransparencySelector.AbsolutePosition.Y
-                    local Max = Min + TransparencySelector.AbsoluteSize.Y
+                    local Max = TransparencySelector.AbsolutePosition.Y + TransparencySelector.AbsoluteSize.Y
                     local Location = math.clamp(Mouse.Y, Min, Max)
 
+                    local OldTransparency = ColorPicker.Transparency
                     ColorPicker.Transparency = (Location - Min) / (Max - Min)
-                    ColorPicker:Display()
+
+                    if ColorPicker.Transparency ~= OldTransparency then
+                        ColorPicker:Update()
+                    end
 
                     RunService.RenderStepped:Wait()
                 end
@@ -2088,12 +2011,11 @@ do
 
             local Success, Color = pcall(Color3.fromHex, HueBox.Text)
             if Success and typeof(Color) == "Color3" then
-                ColorPicker:SetHSVFromRGB(Color)
+                ColorPicker.Hue, ColorPicker.Sat, ColorPicker.Vib = Color:ToHSV()
             end
 
-            ColorPicker:Display()
+            ColorPicker:Update()
         end)
-
         RgbBox.FocusLost:Connect(function(Enter)
             if not Enter then
                 return
@@ -2104,7 +2026,7 @@ do
                 ColorPicker:SetHSVFromRGB(Color3.fromRGB(R, G, B))
             end
 
-            ColorPicker:Display()
+            ColorPicker:Update()
         end)
 
         ColorPicker:Display()
@@ -2115,7 +2037,7 @@ do
 
         Options[Idx] = ColorPicker
 
-        return ColorPicker
+        return self
     end
 
     BaseAddons.__index = Funcs
@@ -2345,6 +2267,40 @@ do
                 Parent = Holder,
             })
 
+            -- Añadir efecto hover
+            New("UIGradient", {
+                Transparency = NumberSequence.new({
+                    NumberSequenceKeypoint.new(0, 1),
+                    NumberSequenceKeypoint.new(1, 1)
+                }),
+                Parent = Base
+            })
+
+            -- Añadir efecto de brillo al hacer hover
+            local function UpdateHoverEffect(Hovering)
+                TweenService:Create(Base:FindFirstChildOfClass("UIGradient"), Library.TweenInfo, {
+                    Transparency = NumberSequence.new({
+                        NumberSequenceKeypoint.new(0, Hovering and 0.9 or 1),
+                        NumberSequenceKeypoint.new(1, Hovering and 0.8 or 1)
+                    })
+                }):Play()
+            end
+
+            Base.MouseEnter:Connect(function()
+                if Button.Disabled then return end
+                UpdateHoverEffect(true)
+            end)
+
+            Base.MouseLeave:Connect(function()
+                if Button.Disabled then return end  
+                UpdateHoverEffect(false)
+            end)
+
+            New("UICorner", {
+                CornerRadius = UDim.new(0, Library.CornerRadius - 1),
+                Parent = Base,
+            })
+
             local Stroke = New("UIStroke", {
                 Color = "OutlineColor",
                 Transparency = Button.Disabled and 0.5 or 0,
@@ -2507,7 +2463,7 @@ do
             Button.Base.TextTransparency = Button.Disabled and 0.8 or 0.4
             Button.Stroke.Transparency = Button.Disabled and 0.5 or 0
 
-            Library.Registry[Button.Base].BackgroundColor3 = Button.Disabled and "BackgroundColor" or "MainColor"
+            Library.Registry[Button.Base].BackgroundColor3 = Button.Disabled and "BackgroundColor"
         end
 
         function Button:SetDisabled(Disabled: boolean)
@@ -3895,27 +3851,38 @@ function Library:Notify(...)
         Size = false,
     })
 
+    -- Añadir efecto de brillo
+    New("UIGradient", {
+        Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(200, 200, 200))
+        }),
+        Rotation = 90,
+        Transparency = NumberSequence.new(0.95),
+        Parent = Background
+    })
+
     local Holder = New("Frame", {
         BackgroundColor3 = "MainColor",
         Position = UDim2.fromOffset(2, 2),
         Size = UDim2.new(1, -4, 1, -4),
         Parent = Background,
     })
-    New("UICorner", {
-        CornerRadius = UDim.new(0, Library.CornerRadius - 1),
-        Parent = Holder,
-    })
-    New("UIListLayout", {
-        Padding = UDim.new(0, 4),
-        Parent = Holder,
-    })
-    New("UIPadding", {
-        PaddingBottom = UDim.new(0, 8),
-        PaddingLeft = UDim.new(0, 8),
-        PaddingRight = UDim.new(0, 8),
-        PaddingTop = UDim.new(0, 8),
-        Parent = Holder,
-    })
+
+    -- Añadir icono de notificación
+    local NotifyIcon = Library:GetIcon("bell")
+    if NotifyIcon then
+        New("ImageLabel", {
+            BackgroundTransparency = 1,
+            Image = NotifyIcon.Url,
+            ImageColor3 = Library.Scheme.AccentColor,
+            ImageRectOffset = NotifyIcon.ImageRectOffset,
+            ImageRectSize = NotifyIcon.ImageRectSize,
+            Position = UDim2.fromOffset(8, 8),
+            Size = UDim2.fromOffset(20, 20),
+            Parent = Holder
+        })
+    end
 
     local Title
     local Desc
