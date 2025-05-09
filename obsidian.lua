@@ -44,8 +44,8 @@ local Library = {
     Notifications = {},
 
     ToggleKeybind = Enum.KeyCode.RightControl,
-    TweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-    NotifyTweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+    TweenInfo = TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+    NotifyTweenInfo = TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
 
     Toggled = false,
     Unloaded = false,
@@ -68,20 +68,20 @@ local Library = {
 
     MinSize = Vector2.new(480, 360),
     DPIScale = 1,
-    CornerRadius = 6,
+    CornerRadius = 4,
 
     IsLightTheme = false,
     Scheme = {
-        BackgroundColor = Color3.fromRGB(20, 20, 25), -- Fondo más oscuro y con tono azulado
-        MainColor = Color3.fromRGB(30, 30, 35), -- Color principal más oscuro y con tono azulado  
-        AccentColor = Color3.fromRGB(98, 195, 247), -- Azul más brillante y moderno
-        OutlineColor = Color3.fromRGB(50, 50, 55), -- Bordes más suaves
-        FontColor = Color3.fromRGB(235, 235, 235), -- Texto más suave
-        Font = Font.fromEnum(Enum.Font.Gotham), -- Fuente más moderna
+        BackgroundColor = Color3.fromRGB(15, 15, 15),
+        MainColor = Color3.fromRGB(25, 25, 25),
+        AccentColor = Color3.fromRGB(125, 85, 255),
+        OutlineColor = Color3.fromRGB(40, 40, 40),
+        FontColor = Color3.new(1, 1, 1),
+        Font = Font.fromEnum(Enum.Font.Code),
 
-        Red = Color3.fromRGB(255, 75, 75), -- Rojo más suave
-        Dark = Color3.fromRGB(15, 15, 20), -- Negro con tono azulado
-        White = Color3.fromRGB(235, 235, 235), -- Blanco más suave
+        Red = Color3.fromRGB(255, 50, 50),
+        Dark = Color3.new(0, 0, 0),
+        White = Color3.new(1, 1, 1),
     },
 
     Registry = {},
@@ -855,19 +855,6 @@ function Library:MakeOutline(Frame: GuiObject, Corner: number?, ZIndex: number?)
         Size = UDim2.new(1, 4, 1, 4),
         ZIndex = ZIndex,
         Parent = Frame,
-    })
-
-    -- Añadir sombra sutil
-    New("ImageLabel", {
-        BackgroundTransparency = 1,
-        Image = "rbxassetid://7912134082",
-        ImageColor3 = Color3.new(0, 0, 0),
-        ImageTransparency = 0.65,
-        Position = UDim2.fromOffset(-15, -15),
-        Size = UDim2.new(1, 30, 1, 30),
-        SliceCenter = Rect.new(30, 30, 30, 30),
-        ZIndex = (ZIndex or 0) - 1,
-        Parent = Holder
     })
 
     local Outline = New("Frame", {
@@ -2267,40 +2254,6 @@ do
                 Parent = Holder,
             })
 
-            -- Añadir efecto hover
-            New("UIGradient", {
-                Transparency = NumberSequence.new({
-                    NumberSequenceKeypoint.new(0, 1),
-                    NumberSequenceKeypoint.new(1, 1)
-                }),
-                Parent = Base
-            })
-
-            -- Añadir efecto de brillo al hacer hover
-            local function UpdateHoverEffect(Hovering)
-                TweenService:Create(Base:FindFirstChildOfClass("UIGradient"), Library.TweenInfo, {
-                    Transparency = NumberSequence.new({
-                        NumberSequenceKeypoint.new(0, Hovering and 0.9 or 1),
-                        NumberSequenceKeypoint.new(1, Hovering and 0.8 or 1)
-                    })
-                }):Play()
-            end
-
-            Base.MouseEnter:Connect(function()
-                if Button.Disabled then return end
-                UpdateHoverEffect(true)
-            end)
-
-            Base.MouseLeave:Connect(function()
-                if Button.Disabled then return end  
-                UpdateHoverEffect(false)
-            end)
-
-            New("UICorner", {
-                CornerRadius = UDim.new(0, Library.CornerRadius - 1),
-                Parent = Base,
-            })
-
             local Stroke = New("UIStroke", {
                 Color = "OutlineColor",
                 Transparency = Button.Disabled and 0.5 or 0,
@@ -2463,7 +2416,7 @@ do
             Button.Base.TextTransparency = Button.Disabled and 0.8 or 0.4
             Button.Stroke.Transparency = Button.Disabled and 0.5 or 0
 
-            Library.Registry[Button.Base].BackgroundColor3 = Button.Disabled and "BackgroundColor"
+            Library.Registry[Button.Base].BackgroundColor3 = Button.Disabled and "BackgroundColor" or "MainColor"
         end
 
         function Button:SetDisabled(Disabled: boolean)
@@ -3851,38 +3804,27 @@ function Library:Notify(...)
         Size = false,
     })
 
-    -- Añadir efecto de brillo
-    New("UIGradient", {
-        Color = ColorSequence.new({
-            ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
-            ColorSequenceKeypoint.new(1, Color3.fromRGB(200, 200, 200))
-        }),
-        Rotation = 90,
-        Transparency = NumberSequence.new(0.95),
-        Parent = Background
-    })
-
     local Holder = New("Frame", {
         BackgroundColor3 = "MainColor",
         Position = UDim2.fromOffset(2, 2),
         Size = UDim2.new(1, -4, 1, -4),
         Parent = Background,
     })
-
-    -- Añadir icono de notificación
-    local NotifyIcon = Library:GetIcon("bell")
-    if NotifyIcon then
-        New("ImageLabel", {
-            BackgroundTransparency = 1,
-            Image = NotifyIcon.Url,
-            ImageColor3 = Library.Scheme.AccentColor,
-            ImageRectOffset = NotifyIcon.ImageRectOffset,
-            ImageRectSize = NotifyIcon.ImageRectSize,
-            Position = UDim2.fromOffset(8, 8),
-            Size = UDim2.fromOffset(20, 20),
-            Parent = Holder
-        })
-    end
+    New("UICorner", {
+        CornerRadius = UDim.new(0, Library.CornerRadius - 1),
+        Parent = Holder,
+    })
+    New("UIListLayout", {
+        Padding = UDim.new(0, 4),
+        Parent = Holder,
+    })
+    New("UIPadding", {
+        PaddingBottom = UDim.new(0, 8),
+        PaddingLeft = UDim.new(0, 8),
+        PaddingRight = UDim.new(0, 8),
+        PaddingTop = UDim.new(0, 8),
+        Parent = Holder,
+    })
 
     local Title
     local Desc
@@ -5362,4 +5304,62 @@ Library:GiveSignal(Teams.ChildAdded:Connect(OnTeamChange))
 Library:GiveSignal(Teams.ChildRemoved:Connect(OnTeamChange))
 
 getgenv().Library = Library
+
+-- Función para mostrar una vista previa visual del personaje del jugador local en un ViewportFrame
+local function CrearVistaPreviaPersonaje()
+    local Players = game:GetService("Players")
+    local LocalPlayer = Players.LocalPlayer
+
+    -- Crear la GUI si no existe
+    local playerGui = LocalPlayer:FindFirstChild("PlayerGui") or LocalPlayer:WaitForChild("PlayerGui")
+    local screenGui = playerGui:FindFirstChild("CharacterPreviewGui")
+    if not screenGui then
+        screenGui = Instance.new("ScreenGui")
+        screenGui.Name = "CharacterPreviewGui"
+        screenGui.Parent = playerGui
+    end
+
+    -- Limpiar previas anteriores
+    for _, v in ipairs(screenGui:GetChildren()) do
+        if v:IsA("ViewportFrame") then v:Destroy() end
+    end
+
+    -- Crear el ViewportFrame
+    local viewport = Instance.new("ViewportFrame")
+    viewport.Size = UDim2.new(0, 300, 0, 400)
+    viewport.Position = UDim2.new(0.5, -150, 0.5, -200)
+    viewport.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    viewport.Name = "CharacterPreviewViewport"
+    viewport.Parent = screenGui
+
+    -- Clonar el personaje
+    local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    local characterClone = character:Clone()
+    -- Quitar scripts y animaciones para evitar errores
+    for _, obj in ipairs(characterClone:GetDescendants()) do
+        if obj:IsA("Script") or obj:IsA("LocalScript") or obj:IsA("Animator") then
+            obj:Destroy()
+        end
+    end
+    characterClone.Parent = viewport
+
+    -- Crear una cámara para el ViewportFrame
+    local camera = Instance.new("Camera")
+    viewport.CurrentCamera = camera
+    camera.Parent = viewport
+
+    -- Posicionar la cámara para que apunte al personaje
+    local humanoidRootPart = characterClone:FindFirstChild("HumanoidRootPart")
+    if humanoidRootPart then
+        camera.CFrame = CFrame.new(
+            humanoidRootPart.Position + Vector3.new(0, 2, 8),
+            humanoidRootPart.Position + Vector3.new(0, 2, 0)
+        )
+    else
+        camera.CFrame = CFrame.new(Vector3.new(0, 5, 10), Vector3.new(0, 5, 0))
+    end
+end
+
+-- Puedes llamar a CrearVistaPreviaPersonaje() cuando quieras mostrar la vista previa visual
+
 return Library
